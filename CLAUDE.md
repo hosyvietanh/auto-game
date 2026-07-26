@@ -13,23 +13,58 @@ the user only opens the Unity editor, presses Play, and reports what they see.
 
 ## Commands (the agentic loop)
 
+There are **two verification paths**. Prefer the pipeline path (editor stays open); fall
+back to batch mode if the pipeline isn't connected.
+
+### Preferred: pipeline path (editor stays OPEN)
+
+Drives the running editor via the `com.unity.pipeline` package (installed, `0.4.0-exp.1`)
+and the standalone `unity` CLI (`~/.unity/bin/unity`, beta channel). No quitting.
+
 ```bash
-bash scripts/compile-check.sh    # headless compile/import check — run after every C# change
+bash scripts/pipe-status.sh          # show connected editors (confirm one is up first)
+bash scripts/pipe-test.sh EditMode   # run EditMode tests in the live editor (via run_tests)
+bash scripts/pipe-test.sh PlayMode   # run PlayMode tests in the live editor
+bash scripts/pipe-command.sh         # list the commands the editor exposes
+bash scripts/pipe-command.sh <cmd> [--flag val ...]   # run one against the open editor
+```
+
+Key commands for the per-change loop (all via `pipe-command.sh`):
+- `recompile` then poll `recompile_status` — picks up C# edits WITHOUT the editor needing
+  focus (status goes idle→compiling→completed/up_to_date). Do this after editing scripts.
+- `run_tests --mode EditMode|PlayMode [--filter <name>]` — runs tests IN the open editor and
+  returns a JSON summary synchronously (this is what `pipe-test.sh` wraps). `list_tests`,
+  `test_status`, `cancel_tests` are the companions.
+- `console --tail <n> [--level Error]` — read the live Unity console (compile errors,
+  runtime logs) without asking the user to look.
+- `editor_play` / `editor_stop` — enter/exit Play Mode.
+
+Requires: the user has the project open in the editor AND it finished compiling. Recompiles
+happen automatically when the editor has focus (or via the `recompile` command above). Two
+beta caveats: (1) **never use `unity test`** here — it spawns its own batch editor and
+collides with the open one ("another Unity instance is running"); use `run_tests` via the
+pipeline. (2) entering **Play Mode** triggers a domain reload that can rotate the pipeline
+auth token; if a command 401s right after Play Mode, retry (or re-run `unity auth login`).
+
+### Fallback: classic batch mode (editor must be CLOSED)
+
+```bash
+bash scripts/compile-check.sh    # headless compile/import check
 bash scripts/run-tests-edit.sh   # EditMode tests (fast, pure C# logic)
 bash scripts/run-tests-play.sh   # PlayMode tests (SLOW — only when physics/combat changes)
 bash scripts/create-scene.sh     # regenerate Assets/Scenes/Game.unity (rarely needed)
 bash scripts/setup-art.sh        # download Kenney sprites into Assets/Resources/Art/Kenney/
 ```
 
+These refuse to run while `Temp/UnityLockfile` exists (editor open ⇔ batch CLI can't run).
+Use them only when the editor is closed, or for a clean-room check.
+
 Logs land in `Logs/` (gitignored): `compile.log`, `tests-edit.log`, `tests-play.log`,
-`TestResults-{EditMode,PlayMode}.xml`. On failure grep for `error CS` in the log.
+`TestResults-*.xml`, `PipeTestResults.xml`. On failure grep for `error CS` in the log.
 
-**CRITICAL: the Unity editor and CLI are mutually exclusive.** All scripts refuse to run
-while `Temp/UnityLockfile` exists. Ask the user to close the editor before CLI runs, and
-to reopen it to play-test after.
-
-Per-change cycle: edit C# → `compile-check.sh` → fix until green → run relevant tests →
-commit (INCLUDING new `.meta` files — never gitignore metas) → ask user to Play and report.
+Per-change cycle: edit C# → run tests (pipeline path if editor open, else batch) → fix
+until green → commit (INCLUDING new `.meta` files — never gitignore metas) → ask user to
+Play and report.
 
 ## Architecture: everything is C#, almost nothing is YAML
 
@@ -79,7 +114,9 @@ Collision rules are configured at runtime in `LayerConfig.Setup()` via
 
 ## Gotchas (learned the hard way — keep this list updated)
 
-1. `Temp/UnityLockfile` — editor open ⇒ every CLI script exits early by design.
+1. `Temp/UnityLockfile` — editor open ⇒ the **classic batch** scripts (`compile-check`,
+   `run-tests-*`, `create-scene`) exit early by design. The **pipeline** scripts
+   (`pipe-*`) are the opposite: they require the editor to be open and connected.
 2. The template camera defaults to perspective; `GameBootstrap` must set `orthographic = true`
    and position/size the camera to frame the level.
 3. `Physics2D.gravity` defaults to (0, −9.81): zero it in bootstrap AND set `gravityScale = 0`
