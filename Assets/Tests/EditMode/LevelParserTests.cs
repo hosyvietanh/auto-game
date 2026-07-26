@@ -34,7 +34,7 @@ namespace BattleCity.EditModeTests
         public void Level1_HasSpawnsAndEagle()
         {
             var level = LevelParser.Parse(LevelDefinition.Level1);
-            Assert.That(level.PlayerSpawn, Is.EqualTo(new Vector2(11, 2)));
+            Assert.That(level.PlayerSpawn, Is.EqualTo(new Vector2(11, 3)));
             Assert.That(level.EaglePosition, Is.EqualTo(new Vector2(8, 1)));
             Assert.That(level.EnemySpawns.Count, Is.EqualTo(3));
         }
