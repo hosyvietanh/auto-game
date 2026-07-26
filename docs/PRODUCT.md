@@ -14,7 +14,7 @@ agent, and a non-technical human validates by playing. Product decisions therefo
 
 ## 2. Player experience
 
-The player controls a green tank in a walled arena viewed top-down. They drive in four
+The player controls a yellow tank in a walled arena viewed top-down. They drive in four
 directions, fire shells, and must destroy every enemy tank that spawns while keeping their
 eagle intact. Clearing all enemies advances to the next, harder stage; the run continues
 until the player wins all ten stages or loses.
@@ -54,6 +54,7 @@ journey
 |---|---|---|
 | **Brick wall** | brick | Destructible — shells break it, opening new firing lanes |
 | **Steel wall** | steel | Indestructible — blocks shells and tanks; forms the arena border |
+| **Bush** | foliage | Decorative cover — tanks and shells pass straight through; drawn *over* tanks so they appear hidden |
 | **Eagle (base)** | eagle | The thing you protect; if destroyed, you lose instantly |
 | **Empty** | floor | Drivable |
 
@@ -116,18 +117,24 @@ stage always plays the same — important for reproducible verification.
 ## 5. Presentation
 
 - **2D gameplay inside Unity's 3D URP template**: sprite renderers + 2D physics. Camera is
-  orthographic and framed to the level dimensions.
-- **HUD**: score, lives, enemies remaining, and **STAGE n/10**.
-- **Art**: Kenney CC0 sprites; if a sprite is missing, the game falls back to a generated
-  solid-color square so it always runs.
-- Consistent z-ordering: floor < walls < eagle < tanks < bullets < effects.
+  orthographic and framed to the level dimensions, shifted left to make room for the sidebar.
+- **Classic NES styling**: a **pure-black playfield**, a yellow player tank, silver/green
+  enemy tanks, and chunky pixel-art brick/steel/bush/eagle tiles.
+- **Sidebar HUD**: a gray panel down the right edge showing the remaining-enemy tank icons
+  (one per enemy left to defeat), the score, player lives (label + tank icon + count), and
+  the current **stage number**.
+- **Art**: sprites are **procedurally generated in C#** (`NesArt.cs`) from small pixel grids
+  — no external art assets. If a name has no grid, the game falls back to a Kenney sprite (if
+  present) and then a generated solid-color square, so it always renders.
+- Consistent z-ordering: floor < walls < eagle < tanks < bullets < **bushes** < effects.
 
 ## 6. Current feature state
 
 **Implemented and verified:** all mechanics above — 4-dir movement with lane auto-align,
-single-shell firing, brick/steel/eagle tiles, three enemy types with AI, 10 stages with the
-two-axis ramp, score/lives carry-over, HUD with stage counter, win/level-cleared/lose
-screens, and R-to-restart. Live on GitHub Pages.
+single-shell firing, brick/steel/eagle tiles, decorative bushes, three enemy types with AI,
+10 stages with the two-axis ramp, score/lives carry-over, the classic gray sidebar HUD,
+procedural NES-style pixel art on a black playfield, win/level-cleared/lose screens, and
+R-to-restart. Live on GitHub Pages.
 
 **Deliberately out of scope (for now):** power-ups, two-player co-op, sound, per-frame
 animation, high-score persistence, and a level editor. These are natural extensions but

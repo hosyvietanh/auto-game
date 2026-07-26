@@ -62,5 +62,30 @@ namespace BattleCity.EditModeTests
             Assert.Throws<System.ArgumentException>(
                 () => LevelParser.Parse(new[] { "####", "#1P#", "####" }), "missing eagle should throw");
         }
+
+        [Test]
+        public void CharToTile_MapsBush()
+        {
+            Assert.That(LevelDefinition.CharToTile('T'), Is.EqualTo(TileType.Bush));
+        }
+
+        [Test]
+        public void Level1_ContainsBushTiles()
+        {
+            var level = LevelParser.Parse(LevelDefinition.Level1);
+            bool any = false;
+            for (int x = 0; x < level.Width && !any; x++)
+                for (int y = 0; y < level.Height; y++)
+                    if (level.Tiles[x, y] == TileType.Bush) { any = true; break; }
+            Assert.That(any, Is.True, "Level1 should contain decorative bush tiles");
+        }
+
+        [Test]
+        public void AllLevels_ParseWithoutError()
+        {
+            // Guards the bush sprinkles: rows stay equal-length with exactly one P and E.
+            foreach (var map in LevelDefinition.All)
+                Assert.DoesNotThrow(() => LevelParser.Parse(map));
+        }
     }
 }

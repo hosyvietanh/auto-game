@@ -6,11 +6,13 @@ namespace BattleCity
         Brick,
         Steel,
         Eagle,
+        Bush,
     }
 
     /// <summary>
     /// Levels are ASCII maps: one string per row, row 0 is the TOP of the screen.
     ///   '#' steel wall (indestructible)   'B' brick wall (destructible)
+    ///   'T' bush/tree (decorative — tanks & bullets pass through, drawn over tanks)
     ///   'E' eagle/base (lose if destroyed)  'P' player spawn   '1'-'3' enemy spawns
     ///   '.' empty floor
     /// All rows must be the same length. Exactly one 'P' and one 'E' per level.
@@ -24,7 +26,7 @@ namespace BattleCity
             "#.BB.BB.B.BB.BB.#",
             "#.BB.BB.B.BB.BB.#",
             "#.BB.BB.B.BB.BB.#",
-            "#.......B.......#",
+            "#..TT...B...TT..#",
             "#B.BB.B...B.BB.B#",
             "#..BB..BBB..BB..#",
             "#.......#.......#",
@@ -43,7 +45,7 @@ namespace BattleCity
             "#..BBB...BBB....#",
             "#..B.B...B.B....#",
             "#..BBB...BBB....#",
-            "#...............#",
+            "#..TTT.....TTT..#",
             "#.BB.BB.BB.BB.B.#",
             "#...............#",
             "#.BB.BB.BB.BB.B.#",
@@ -59,7 +61,7 @@ namespace BattleCity
         {
             "#################",
             "#1......2......3#",
-            "#.###.....###...#",
+            "#.###.TTT.###...#",
             "#.BBB.BBB.BBB.B.#",
             "#.....B.B.......#",
             "#.BB..B.B..BB.B.#",
@@ -220,6 +222,7 @@ namespace BattleCity
             {
                 case '#': return TileType.Steel;
                 case 'B': return TileType.Brick;
+                case 'T': return TileType.Bush;
                 case 'E': return TileType.Eagle;
                 default: return TileType.Empty;
             }

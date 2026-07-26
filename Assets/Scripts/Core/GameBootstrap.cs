@@ -36,6 +36,11 @@ namespace BattleCity
             GameOverScreen.Create(hud.transform);
         }
 
+        // Fraction of screen width reserved for the classic right-side sidebar HUD.
+        // HUD.cs draws an opaque gray panel over this strip; we shift the camera so the
+        // playfield centers in the remaining space instead of hiding behind the panel.
+        public const float SidebarFraction = 0.16f;
+
         static void ConfigureCamera(ParsedLevel level)
         {
             var cam = Camera.main;
@@ -46,13 +51,19 @@ namespace BattleCity
             }
 
             cam.orthographic = true;
-            cam.backgroundColor = new Color(0.07f, 0.07f, 0.07f);
-            cam.transform.position = new Vector3((level.Width - 1) / 2f, (level.Height - 1) / 2f, -10f);
+            cam.backgroundColor = Color.black;
 
             // Fit the whole level regardless of aspect ratio, with a small margin.
             float halfHeight = level.Height / 2f;
             float halfWidthAsHeight = (level.Width / 2f) / cam.aspect;
             cam.orthographicSize = Mathf.Max(halfHeight, halfWidthAsHeight) + 1f;
+
+            // Center on the level, then nudge right so the playfield sits in the left
+            // (1 - SidebarFraction) of the screen, clear of the sidebar panel.
+            float visibleWorldWidth = cam.orthographicSize * 2f * cam.aspect;
+            float shiftX = (SidebarFraction / 2f) * visibleWorldWidth;
+            cam.transform.position = new Vector3(
+                (level.Width - 1) / 2f + shiftX, (level.Height - 1) / 2f, -10f);
         }
     }
 }

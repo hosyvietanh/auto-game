@@ -26,6 +26,9 @@ namespace BattleCity
                         case TileType.Eagle:
                             TileFactory.CreateEagle(pos, root.transform);
                             break;
+                        case TileType.Bush:
+                            TileFactory.CreateBush(pos, root.transform);
+                            break;
                     }
                 }
             }

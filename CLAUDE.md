@@ -77,10 +77,10 @@ tanks, bullets, and UI are constructed at runtime by factory methods
 Code layout (`Assets/Scripts/`, asmdef `BattleCity`, namespace `BattleCity`):
 - `Core/` — `GameBootstrap` (entry point, wires everything), `LayerConfig`, `GameManager`, `GameState`
 - `Level/` — `LevelDefinition` (ASCII map), `LevelBuilder`, `TileFactory`, `Destructible`
-- `Tank/` — `TankMotor`, `TankData`, `TankFactory`, `PlayerController`, `EnemyController`, `EnemySpawner`, `ArtRegistry`
+- `Tank/` — `TankMotor`, `TankData`, `TankFactory`, `PlayerController`, `EnemyController`, `EnemySpawner`, `ArtRegistry`, `NesArt` (procedural pixel-art sprites)
 - `Combat/` — `Projectile`, `ProjectileFactory`
 - `Base/` — `BaseController` (the eagle)
-- `UI/` — `HUD`, `GameOverScreen` (uGUI canvases built from code)
+- `UI/` — `HUD` (classic gray sidebar), `GameOverScreen` (uGUI canvases built from code)
 - `Editor/` — asmdef `BattleCity.Editor`, namespace `BattleCity.EditorTools`:
   `LayerSetup` (writes TagManager layers), `SceneBuilder`, `ArtImporter` (sprite import settings)
 
@@ -105,12 +105,20 @@ Collision rules are configured at runtime in `LayerConfig.Setup()` via
 - 2D gameplay inside the 3D URP template: `SpriteRenderer` + `Rigidbody2D` + 2D colliders.
   Do NOT use URP 2D-renderer features (Light2D etc.) — the template has no 2D renderer asset.
 - 1 level tile = 1 Unity unit. Sprite z-order via `sortingOrder`: floor 0, walls 10,
-  eagle 15, tanks 20, bullets 30, effects 40.
+  eagle 15, tanks 20, bullets 30, bushes 35, effects 40.
 - Input: `PlayerController` creates `InputAction`s **in code** (WASD/arrows + Space/Enter).
   The template's `InputSystem_Actions.inputactions` is unused.
-- Art: `ArtRegistry.Load(name)` pulls Kenney sprites from `Resources/Art/Kenney/`; if a
-  sprite is missing it falls back to a generated solid-color square, so the game always runs.
-- Kenney pack is CC0; `ArtImporter` (AssetPostprocessor) forces Sprite/Point/PPU=64 on that folder.
+- Art: sprites are **generated procedurally in C#** by `NesArt` (classic-NES pixel grids →
+  Point-filtered `Texture2D`). `ArtRegistry.Load(name)` tries `NesArt.Get` first, then a
+  Kenney sprite under `Resources/Art/Kenney/`, then a solid-color square — so the game always
+  renders. To restyle a sprite, edit its grid in `NesArt.cs`; keys are the `ArtRegistry.Names`
+  constants. Tanks are drawn facing up and rotated per direction by `TankMotor`.
+- `ArtImporter` (AssetPostprocessor) forces Sprite/Point/PPU=64 on `Resources/Art/`;
+  `scripts/setup-art.sh` (Kenney CC0 download) is now **optional** — a fallback only.
+- Tiles: ASCII legend `#` steel, `B` brick, `T` bush (decorative, no collider — tanks/bullets
+  pass through, drawn over tanks), `E` eagle, `P` player, `1`–`3` enemy spawns, `.` empty.
+- The camera clears to **pure black** and is shifted left by `GameBootstrap.SidebarFraction`
+  so the playfield clears the right-side sidebar HUD.
 
 ## Gotchas (learned the hard way — keep this list updated)
 

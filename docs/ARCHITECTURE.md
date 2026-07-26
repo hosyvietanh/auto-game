@@ -60,6 +60,7 @@ flowchart TD
         EC[EnemyController]
         ESP[EnemySpawner]
         ART[ArtRegistry]
+        NES[NesArt<br/>procedural sprites]
     end
 
     subgraph Combat["Combat/"]
@@ -83,6 +84,7 @@ flowchart TD
     GB --> ESP --> TKF
     GM --> ESP
     TKF --> TM & PC & EC & DES & ART & TD
+    ART --> NES
     PC & EC --> PF --> PROJ
     PROJ --> DES
     BC --> DES --> GM
@@ -94,7 +96,7 @@ flowchart TD
 |---|---|
 | **Core/** | Entry point (`GameBootstrap`), run-state (`GameManager` + `GameState`), cross-level progression (`GameSession`), physics setup (`LayerConfig`) |
 | **Level/** | ASCII maps (`LevelDefinition`), tuning (`LevelCatalog`), parse (`LevelParser`), instantiate (`LevelBuilder` → `TileFactory`), damage (`Destructible`) |
-| **Tank/** | Movement (`TankMotor`), stats & wave mix (`TankData`/`WavePlan`), construction (`TankFactory`), control (`PlayerController`, `EnemyController`), spawning (`EnemySpawner`), sprites (`ArtRegistry`) |
+| **Tank/** | Movement (`TankMotor`), stats & wave mix (`TankData`/`WavePlan`), construction (`TankFactory`), control (`PlayerController`, `EnemyController`), spawning (`EnemySpawner`), sprite resolution (`ArtRegistry`) + procedural pixel-art generation (`NesArt`) |
 | **Combat/** | Shells (`Projectile`, `ProjectileFactory`) |
 | **Base/** | The eagle (`BaseController`) |
 | **UI/** | uGUI canvases built from code (`HUD`, `GameOverScreen`) |
@@ -146,9 +148,14 @@ flowchart LR
     E --> F["TileFactory / TankFactory<br/>runtime GameObjects"]
 ```
 
-Map characters: `#` steel, `B` brick, `E` eagle, `P` player, `1`–`3` enemy spawns, `.` empty.
-Row 0 is the **top** of the arena. `LevelParser` throws on any malformed map, so a typo is
-caught by an EditMode test — not by the human pressing Play (see `LevelCatalogTests`).
+Map characters: `#` steel, `B` brick, `T` bush (decorative), `E` eagle, `P` player, `1`–`3`
+enemy spawns, `.` empty. Row 0 is the **top** of the arena. `LevelParser` throws on any
+malformed map, so a typo is caught by an EditMode test — not by the human pressing Play (see
+`LevelCatalogTests`).
+
+Bushes (`T`) are **collider-free decoration**: `TileFactory.CreateBush` adds only a
+`SpriteRenderer` at a sorting order above tanks and bullets, so tanks and shells pass through
+and tanks appear to hide beneath the foliage. They never affect spawns or pathing.
 
 ## 5. Level progression & the scene-reload trick
 
@@ -233,9 +240,17 @@ headless batch mode).
 - **Input** is created entirely in code by `PlayerController` (`InputAction`s for
   WASD/arrows + Space/Enter). The template's `InputSystem_Actions.inputactions` asset is
   unused.
-- **Art**: `ArtRegistry.Load(name)` pulls Kenney sprites from `Resources/Art/Kenney/`. If a
-  sprite is missing it returns a generated solid-color square, so the game always renders.
-  `ArtImporter` (an `AssetPostprocessor`) forces Sprite/Point/PPU=64 on that folder.
+- **Art**: sprites are **procedurally generated in C#** by `NesArt` — classic-NES-style
+  pixel art baked from small char grids into Point-filtered `Texture2D`s at runtime (grid
+  row 0 is the visual top, so rows are written flipped). `ArtRegistry.Load(name)` asks
+  `NesArt.Get` first, then falls back to a Kenney sprite under `Resources/Art/Kenney/` (if
+  present), then a generated solid-color square — so the game always renders. Tanks are drawn
+  facing up and rotated per direction by `TankMotor`, so one grid per tank type suffices.
+  `ArtImporter` (an `AssetPostprocessor`) still forces Sprite/Point/PPU=64 on the Kenney
+  folder; `scripts/setup-art.sh` is now optional (fallback only).
+- **UI**: `HUD` builds the classic gray right-side **sidebar** from code (remaining-enemy
+  tank icons, score, lives, stage number); `GameBootstrap.ConfigureCamera` shifts the camera
+  left by `SidebarFraction` so the playfield clears the panel. Background is pure black.
 - **Runtime loading rule**: runtime code cannot use `AssetDatabase`; anything loaded at play
   time must live under a `Resources/` folder.
 

@@ -28,16 +28,37 @@ namespace BattleCity
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            screen.title = HUD.MakeLabel(screen.panel.transform, "Title",
-                new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), TextAnchor.MiddleCenter);
-            screen.title.fontSize = 64;
+            screen.title = MakeLabel(screen.panel.transform, "Title", 64,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, 30f));
 
-            screen.subtitle = HUD.MakeLabel(screen.panel.transform, "Subtitle",
-                new Vector2(0.5f, 0.5f), new Vector2(0f, -40f), TextAnchor.MiddleCenter);
-            screen.subtitle.fontSize = 24;
+            screen.subtitle = MakeLabel(screen.panel.transform, "Subtitle", 24,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, -40f));
 
             screen.panel.SetActive(false);
             return screen;
+        }
+
+        static Text MakeLabel(Transform parent, string name, int fontSize, Vector2 anchor, Vector2 offset)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+
+            var text = go.AddComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var rt = text.rectTransform;
+            rt.anchorMin = anchor;
+            rt.anchorMax = anchor;
+            rt.pivot = anchor;
+            rt.anchoredPosition = offset;
+            rt.sizeDelta = new Vector2(600f, 80f);
+            return text;
         }
 
         void Start()

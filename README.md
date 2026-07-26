@@ -7,7 +7,7 @@ Unity editor except to press **Play** and report what they see.
 
 ▶️ **Play it now:** https://hosyvietanh.github.io/auto-game/
 
-![Battle City](https://img.shields.io/badge/Unity-6000.2.10f1-black) ![URP](https://img.shields.io/badge/render-URP%203D-blue) ![CC0 art](https://img.shields.io/badge/art-Kenney%20CC0-green)
+![Battle City](https://img.shields.io/badge/Unity-6000.2.10f1-black) ![URP](https://img.shields.io/badge/render-URP%203D-blue) ![art](https://img.shields.io/badge/art-procedural%20pixel-green)
 
 ---
 
@@ -20,8 +20,10 @@ finale.
 
 - **10 levels** with a monotonic difficulty ramp (more enemies, faster spawns, tougher tank mix)
 - **3 enemy types** — Basic, Fast, Armored — introduced progressively
-- Brick walls you can shoot through, steel walls you can't
-- Score + lives that **carry across levels**, HUD, win/lose/level-cleared screens, restart
+- Brick walls you can shoot through, steel walls you can't, and bushes you hide under
+- Classic NES look: procedural pixel-art sprites, a pure-black playfield, and a gray
+  right-side sidebar HUD (remaining-enemy icons, lives, stage number)
+- Score + lives that **carry across levels**, win/lose/level-cleared screens, restart
 
 See **[docs/PRODUCT.md](docs/PRODUCT.md)** for the full product spec.
 
@@ -96,5 +98,7 @@ CLAUDE.md           agent workflow, gotchas, conventions
 
 ## Credits
 
-- Sprites: [Kenney](https://kenney.nl) game assets (CC0).
+- Sprites: **procedurally generated in C#** (`NesArt.cs`) — classic-NES-style pixel art
+  drawn from small pixel grids at runtime, no external art assets. (Kenney CC0 sprites
+  remain a silent fallback if present under `Resources/Art/Kenney/`.)
 - Built agentically with [Claude Code](https://claude.com/claude-code).

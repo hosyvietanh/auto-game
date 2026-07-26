@@ -11,6 +11,7 @@ namespace BattleCity
     {
         const int SortWalls = 10;
         const int SortEagle = 15;
+        const int SortBush = 35; // above tanks (20) and bullets (30): tanks hide under foliage
 
         public static GameObject CreateBrick(Vector2 pos, Transform parent)
         {
@@ -37,6 +38,21 @@ namespace BattleCity
             var destructible = go.AddComponent<Destructible>();
             destructible.Health = 1;
             go.AddComponent<BaseController>();
+            return go;
+        }
+
+        public static GameObject CreateBush(Vector2 pos, Transform parent)
+        {
+            // Decorative only: no collider and no Destructible, so tanks and bullets pass
+            // straight through. Drawn above tanks (SortBush) so tanks appear to hide in it.
+            var go = new GameObject("Bush");
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+
+            var renderer = go.AddComponent<SpriteRenderer>();
+            renderer.sprite = ArtRegistry.Load(ArtRegistry.Names.Bush, new Color(0.2f, 0.55f, 0.15f));
+            renderer.sortingOrder = SortBush;
+            ArtRegistry.SetWorldSize(renderer, 1f);
             return go;
         }
 

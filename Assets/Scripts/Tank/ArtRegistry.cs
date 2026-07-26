@@ -4,11 +4,11 @@ using UnityEngine;
 namespace BattleCity
 {
     /// <summary>
-    /// Loads Kenney sprites from Resources/Art/Kenney/ with an always-works fallback:
-    /// if a sprite is missing, a solid-color square is generated instead, so the game
-    /// is playable even before/without the art download.
-    /// Sprite file names are centralized in the Names class — fix them in one place
-    /// if the pack layout differs.
+    /// Resolves sprites by name with a three-tier fallback chain so the game always runs:
+    ///   1. <see cref="NesArt"/> — procedural classic-NES pixel art generated in code (default).
+    ///   2. Kenney PNGs under Resources/Art/Kenney/ — silent legacy fallback if present.
+    ///   3. A generated solid-color square — last resort so nothing is ever invisible.
+    /// Sprite names are centralized in the Names class; NesArt keys its grids off these.
     /// </summary>
     public static class ArtRegistry
     {
@@ -22,6 +22,7 @@ namespace BattleCity
             public const string Brick = "crateWood";
             public const string Steel = "crateMetal";
             public const string Eagle = "barrelRed_top";
+            public const string Bush = "bush";
         }
 
         static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
@@ -31,10 +32,12 @@ namespace BattleCity
             if (Cache.TryGetValue(name, out var cached))
                 return cached;
 
-            var sprite = Resources.Load<Sprite>("Art/Kenney/" + name);
+            var sprite = NesArt.Get(name);
+            if (sprite == null)
+                sprite = Resources.Load<Sprite>("Art/Kenney/" + name);
             if (sprite == null)
             {
-                Debug.LogWarning($"ArtRegistry: sprite '{name}' not found under Resources/Art/Kenney — using solid-color fallback. Run scripts/setup-art.sh or fix ArtRegistry.Names.");
+                Debug.LogWarning($"ArtRegistry: sprite '{name}' has no NesArt grid and is not under Resources/Art/Kenney — using solid-color fallback.");
                 sprite = MakeSolidSprite(fallbackColor);
             }
 
