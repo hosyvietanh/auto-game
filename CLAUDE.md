@@ -32,9 +32,16 @@ bash scripts/pipe-command.sh <cmd> [--flag val ...]   # run one against the open
 Key commands for the per-change loop (all via `pipe-command.sh`):
 - `recompile` then poll `recompile_status` — picks up C# edits WITHOUT the editor needing
   focus (status goes idle→compiling→completed/up_to_date). Do this after editing scripts.
-- `run_tests --mode EditMode|PlayMode [--filter <name>]` — runs tests IN the open editor and
-  returns a JSON summary synchronously (this is what `pipe-test.sh` wraps). `list_tests`,
-  `test_status`, `cancel_tests` are the companions.
+- `run_tests --mode EditMode|PlayMode [--filter <name>]` — runs tests IN the open editor.
+  **EditMode runs synchronously; PlayMode CANNOT** — entering Play Mode triggers a domain
+  reload that drops the sync HTTP request (the raw command returns `Mode: None, 0/0`).
+  `pipe-test.sh` handles both: for PlayMode it transparently adds `--async_tests` and polls
+  `test_status` until `"status":"completed"`, so just run `pipe-test.sh PlayMode` as normal.
+  Only drop to the raw command for edge cases; if you do, PlayMode needs `--async_tests` +
+  `test_status` polling (its JSON is pretty-printed — match `"status": "completed"` WITH the
+  space). `list_tests`, `cancel_tests` are the other companions. Filter is matched against the
+  full test name (namespace-qualified prefix like `BattleCity.PlayModeTests.InputBindingTests`
+  works).
 - `console --tail <n> [--level Error]` — read the live Unity console (compile errors,
   runtime logs) without asking the user to look.
 - `editor_play` / `editor_stop` — enter/exit Play Mode.
@@ -85,8 +92,15 @@ Code layout (`Assets/Scripts/`, asmdef `BattleCity`, namespace `BattleCity`):
   `LayerSetup` (writes TagManager layers), `SceneBuilder`, `ArtImporter` (sprite import settings)
 
 Tests: `Assets/Tests/EditMode/` (pure C# logic — level parsing, game state, waves) and
-`Assets/Tests/PlayMode/` (a handful of physics tests). In PlayMode tests drive `TankMotor`
-directly — never simulate Input System key presses (breaks in headless batch mode).
+`Assets/Tests/PlayMode/` (physics + input-binding tests). For gameplay logic, prefer driving
+`TankMotor`/`Destructible` directly — it tests *your* code, not Unity's. To test the input
+layer (binding correctness), inherit `InputTestFixture` (asmdef ref
+`Unity.InputSystem.TestFramework`), `InputSystem.AddDevice<Keyboard>()`, then `Press`/`Release`
+— this **works headless** because the fixture swaps the native runtime for a mocked
+`InputTestRuntime` (proven by `InputBindingTests`). Do NOT poke `Keyboard.current` /
+`InputSystem.QueueStateEvent` WITHOUT the fixture — *that* is what fails in batch mode (no
+real device is connected). Gotchas: hold a button DOWN across a frame (`Press` → `yield` →
+`Release`) so `Update` samples `IsPressed()`; a same-frame `PressAndRelease` is missed.
 
 ### Physics layers (hard-coded ints in `LayerConfig`, names written by `LayerSetup`)
 

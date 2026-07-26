@@ -3,6 +3,8 @@
     "rootNamespace": "BattleCity.PlayModeTests",
     "references": [
         "UnityEngine.TestRunner",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
         "BattleCity"
     ],
     "includePlatforms": [],
