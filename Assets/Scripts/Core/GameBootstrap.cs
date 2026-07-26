@@ -6,28 +6,31 @@ namespace BattleCity
     /// Entry point living on the Bootstrap GameObject in Game.unity — the only
     /// behaviour referenced by the scene. Builds the entire game from code:
     /// physics config, level, camera framing, managers, player, enemies, UI.
+    ///
+    /// Which level is built comes from <see cref="GameSession.LevelIndex"/>: the scene is
+    /// reloaded per level, and GameSession carries the current level + score + lives across
+    /// those reloads.
     /// </summary>
     public class GameBootstrap : MonoBehaviour
     {
-        [Tooltip("Total enemies the player must destroy to win.")]
-        public int TotalEnemies = 20;
-        public int MaxConcurrentEnemies = 4;
-        public float SpawnInterval = 3f;
-
         void Awake()
         {
             LayerConfig.Setup();
 
-            var level = LevelParser.Parse(LevelDefinition.Level1);
+            int levelIndex = Mathf.Clamp(GameSession.LevelIndex, 0, LevelCatalog.Count - 1);
+            int levelNumber = levelIndex + 1;
+            var config = LevelCatalog.Levels[levelIndex];
+
+            var level = LevelParser.Parse(config.Map);
             LevelBuilder.Build(level);
             ConfigureCamera(level);
 
             var gm = new GameObject("GameManager").AddComponent<GameManager>();
 
             var spawner = new GameObject("EnemySpawner").AddComponent<EnemySpawner>();
-            spawner.Configure(level.EnemySpawns, TotalEnemies, MaxConcurrentEnemies, SpawnInterval);
+            spawner.Configure(level.EnemySpawns, config.TotalEnemies, config.MaxConcurrent, config.SpawnInterval, levelNumber);
 
-            gm.Initialize(level, spawner);
+            gm.Initialize(level, spawner, levelNumber);
 
             var hud = HUD.Create();
             GameOverScreen.Create(hud.transform);

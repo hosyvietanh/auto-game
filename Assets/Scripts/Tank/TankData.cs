@@ -33,13 +33,45 @@ namespace BattleCity
         }
     }
 
-    /// <summary>Decides which enemy type spawns at each index of the wave. Pure C#.</summary>
+    /// <summary>
+    /// Decides which enemy type spawns at each index of a level's wave. Pure C#.
+    /// The mix ramps with the level number: early levels are all Basic tanks; Fast tanks
+    /// join in the mid levels and Armored tanks in the later ones, both growing more
+    /// frequent toward level 10.
+    /// </summary>
     public static class WavePlan
     {
-        public static TankType TypeForIndex(int index)
+        public static TankType TypeForIndex(int index, int levelNumber)
         {
-            if ((index + 1) % 4 == 0) return TankType.ArmoredEnemy;
-            if ((index + 1) % 3 == 0) return TankType.FastEnemy;
+            int n = index + 1;
+
+            // Levels 1-2: gentle introduction — only Basic tanks.
+            if (levelNumber <= 2)
+                return TankType.BasicEnemy;
+
+            // Levels 3-4: Fast tanks appear; still no Armored.
+            if (levelNumber <= 4)
+                return (n % 4 == 0) ? TankType.FastEnemy : TankType.BasicEnemy;
+
+            // Levels 5-6: Armored tanks join a steadier stream of Fast tanks.
+            if (levelNumber <= 6)
+            {
+                if (n % 5 == 0) return TankType.ArmoredEnemy;
+                if (n % 3 == 0) return TankType.FastEnemy;
+                return TankType.BasicEnemy;
+            }
+
+            // Levels 7-8: tougher mix.
+            if (levelNumber <= 8)
+            {
+                if (n % 4 == 0) return TankType.ArmoredEnemy;
+                if (n % 3 == 0) return TankType.FastEnemy;
+                return TankType.BasicEnemy;
+            }
+
+            // Levels 9-10: relentless — every other tank Fast, every third Armored.
+            if (n % 3 == 0) return TankType.ArmoredEnemy;
+            if (n % 2 == 0) return TankType.FastEnemy;
             return TankType.BasicEnemy;
         }
     }

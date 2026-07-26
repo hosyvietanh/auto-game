@@ -13,6 +13,7 @@ namespace BattleCity
         public int TotalEnemies { get; private set; } = 20;
         public int MaxAlive { get; private set; } = 4;
         public float SpawnInterval { get; private set; } = 3f;
+        public int LevelNumber { get; private set; } = 1;
 
         /// <summary>Fired with the score value of each killed enemy.</summary>
         public event Action<int> EnemyKilled;
@@ -25,12 +26,13 @@ namespace BattleCity
         int killed;
         float timer;
 
-        public void Configure(IReadOnlyList<Vector2> points, int totalEnemies, int maxAlive, float spawnInterval)
+        public void Configure(IReadOnlyList<Vector2> points, int totalEnemies, int maxAlive, float spawnInterval, int levelNumber)
         {
             spawnPoints = points;
             TotalEnemies = totalEnemies;
             MaxAlive = maxAlive;
             SpawnInterval = spawnInterval;
+            LevelNumber = levelNumber;
             timer = 1f; // first tank appears quickly
             configured = true;
         }
@@ -48,7 +50,7 @@ namespace BattleCity
             timer = SpawnInterval;
 
             var pos = spawnPoints[spawned % spawnPoints.Count];
-            var type = WavePlan.TypeForIndex(spawned);
+            var type = WavePlan.TypeForIndex(spawned, LevelNumber);
             int score = TankData.For(type).ScoreValue;
             var enemy = TankFactory.CreateEnemy(pos, type);
             enemy.GetComponent<Destructible>().Destroyed += _ => OnEnemyDestroyed(score);

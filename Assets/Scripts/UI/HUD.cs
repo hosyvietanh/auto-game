@@ -10,6 +10,7 @@ namespace BattleCity
     public class HUD : MonoBehaviour
     {
         Text scoreText;
+        Text stageText;
         Text livesText;
         Text enemiesText;
 
@@ -27,6 +28,7 @@ namespace BattleCity
 
             var hud = go.AddComponent<HUD>();
             hud.scoreText = MakeLabel(go.transform, "Score", new Vector2(0f, 1f), new Vector2(20f, -16f), TextAnchor.UpperLeft);
+            hud.stageText = MakeLabel(go.transform, "Stage", new Vector2(0f, 1f), new Vector2(20f, -52f), TextAnchor.UpperLeft);
             hud.livesText = MakeLabel(go.transform, "Lives", new Vector2(0.5f, 1f), new Vector2(0f, -16f), TextAnchor.UpperCenter);
             hud.enemiesText = MakeLabel(go.transform, "Enemies", new Vector2(1f, 1f), new Vector2(-20f, -16f), TextAnchor.UpperRight);
             return hud;
@@ -60,6 +62,7 @@ namespace BattleCity
                 return;
 
             scoreText.text = $"SCORE {gm.State.Score}";
+            stageText.text = $"STAGE {gm.LevelNumber}/{LevelCatalog.Count}";
             livesText.text = $"LIVES {gm.State.Lives}";
             enemiesText.text = $"ENEMIES {gm.State.EnemiesRemaining}";
         }

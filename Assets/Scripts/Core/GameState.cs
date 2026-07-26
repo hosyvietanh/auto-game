@@ -5,6 +5,7 @@ namespace BattleCity
     public enum GamePhase
     {
         Playing,
+        LevelCleared,
         Won,
         Lost,
     }
@@ -18,6 +19,18 @@ namespace BattleCity
         public int Lives { get; private set; } = StartingLives;
         public int EnemiesRemaining { get; private set; }
         public GamePhase Phase { get; private set; } = GamePhase.Playing;
+
+        /// <summary>
+        /// Carry score and lives forward from a previously-cleared level. Only valid before
+        /// play begins (Phase == Playing); ignored otherwise so mid-game calls can't cheat.
+        /// </summary>
+        public void Seed(int score, int lives)
+        {
+            if (Phase != GamePhase.Playing)
+                return;
+            Score = Math.Max(0, score);
+            Lives = Math.Max(0, lives);
+        }
 
         public void AddScore(int points)
         {
