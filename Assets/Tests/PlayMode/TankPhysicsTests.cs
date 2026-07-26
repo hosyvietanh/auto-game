@@ -67,5 +67,25 @@ namespace BattleCity.PlayModeTests
             Object.Destroy(steel);
             yield return null;
         }
+        [UnityTest]
+        public IEnumerator Tank_SlightlyOffGrid_DrivesThroughCorridorWithoutSnagging()
+        {
+            // A 1-unit corridor at y=0 bounded by steel walls above and below at x=3.
+            TileFactory.CreateSteel(new Vector2(3f, 1f), null);
+            TileFactory.CreateSteel(new Vector2(3f, -1f), null);
+
+            // Start the tank noticeably off the lane center so its corner would catch
+            // the walls without auto-alignment.
+            var tank = TankFactory.CreatePlayer(new Vector2(0f, 0.2f));
+            tank.GetComponent<PlayerController>().enabled = false;
+            tank.GetComponent<TankMotor>().SetDirection(Vector2.right);
+
+            yield return new WaitForSeconds(1.5f);
+
+            Assert.That(tank.transform.position.x, Is.GreaterThan(4f),
+                "tank should auto-align and drive past the corridor walls, not snag on a corner");
+            Object.Destroy(tank);
+            yield return null;
+        }
     }
 }

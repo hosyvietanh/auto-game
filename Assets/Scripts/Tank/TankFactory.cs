@@ -9,6 +9,17 @@ namespace BattleCity
         const float TankVisualSize = 0.85f;
         const float TankColliderSize = 0.8f;
 
+        static PhysicsMaterial2D frictionless;
+        static PhysicsMaterial2D Frictionless
+        {
+            get
+            {
+                if (frictionless == null)
+                    frictionless = new PhysicsMaterial2D("TankFrictionless") { friction = 0f, bounciness = 0f };
+                return frictionless;
+            }
+        }
+
         public static GameObject CreatePlayer(Vector2 pos)
         {
             var data = TankData.For(TankType.Player);
@@ -70,6 +81,8 @@ namespace BattleCity
             var collider = go.AddComponent<BoxCollider2D>();
             float scale = go.transform.localScale.x;
             collider.size = Vector2.one * (TankColliderSize / (scale > 0f ? scale : 1f));
+            // Frictionless so the tank slides along walls instead of sticking to them.
+            collider.sharedMaterial = Frictionless;
 
             var motor = go.AddComponent<TankMotor>();
             motor.Speed = data.Speed;

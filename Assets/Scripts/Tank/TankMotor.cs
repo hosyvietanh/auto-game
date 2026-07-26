@@ -43,7 +43,28 @@ namespace BattleCity
 
         void FixedUpdate()
         {
-            rb.linearVelocity = moveInput * Speed;
+            Vector2 velocity = moveInput * Speed;
+
+            // Auto-align to the lane on the perpendicular axis. Tanks are narrower than a
+            // 1-unit corridor, so without this a slightly-off-grid tank snags on wall
+            // corners and stops. Nudging the off-axis toward the nearest grid line keeps
+            // the tank centered while driving (classic Battle City behavior).
+            if (moveInput.x != 0f)
+                velocity.y = AlignVelocity(rb.position.y);
+            else if (moveInput.y != 0f)
+                velocity.x = AlignVelocity(rb.position.x);
+
+            rb.linearVelocity = velocity;
+        }
+
+        /// <summary>Velocity that moves a coordinate toward the nearest integer grid line
+        /// without overshooting in one physics step.</summary>
+        float AlignVelocity(float current)
+        {
+            float delta = Mathf.Round(current) - current;
+            if (Mathf.Abs(delta) < 0.001f)
+                return 0f;
+            return Mathf.Clamp(delta / Time.fixedDeltaTime, -Speed, Speed);
         }
     }
 }
